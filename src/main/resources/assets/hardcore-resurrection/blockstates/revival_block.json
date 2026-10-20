@@ -1,0 +1,7 @@
+{
+    "variants": {
+        "": {
+            "model": "hardcore-resurrection:block/revival_block"
+        }
+    }
+}
