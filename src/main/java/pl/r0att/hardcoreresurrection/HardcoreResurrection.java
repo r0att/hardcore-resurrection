@@ -1,9 +1,9 @@
 package pl.r0att.hardcoreresurrection;
 
 import net.fabricmc.api.ModInitializer;
-
+import pl.r0att.hardcoreresurrection.data.DeadPlayerData;
 import net.minecraft.resources.ResourceLocation;
-
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +18,12 @@ public class HardcoreResurrection implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ModBlocks.initialize();
+		DeathHandler.initialize();
+
+		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+			DeadPlayerData.get(server.overworld());
+		});
+
 		LOGGER.info("Hardcore Resurrection initialized");
 	}
 
