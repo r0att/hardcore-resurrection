@@ -9,6 +9,8 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.saveddata.SavedData;
 import pl.r0att.hardcoreresurrection.HardcoreResurrection;
+import java.util.Optional;
+import java.util.UUID;
 
 public final class DeadPlayerData extends SavedData {
     private static final String DATA_NAME =
@@ -114,5 +116,15 @@ public final class DeadPlayerData extends SavedData {
 
     public CompoundTag getDeadPlayers() {
         return deadPlayers;
+    }
+
+    public Optional<CompoundTag> getSnapshot(UUID playerId) {
+        String key = playerId.toString();
+
+        if (!deadPlayers.contains(key)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(deadPlayers.getCompound(key).copy());
     }
 }
