@@ -13,6 +13,7 @@ import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -98,5 +99,92 @@ class RevivalCostTest {
             ),
             List.of(new ItemStack(Items.DIAMOND, 7))
         ));
+    }
+
+    @Test
+    void shouldConsumeRequiredItemsAndLeaveRemainder() {
+        ItemStack required = new ItemStack(Items.DIAMOND, 5);
+        ItemStack available = new ItemStack(Items.DIAMOND, 10);
+
+        boolean consumed = RevivalCost.tryConsume(
+            10,
+            5,
+            List.of(required),
+            List.of(available)
+        );
+
+        assertTrue(consumed);
+        assertEquals(5, available.getCount());
+    }
+
+    @Test
+    void shouldNotConsumeAnythingWhenItemsAreInsufficient() {
+        ItemStack availableDiamonds = new ItemStack(Items.DIAMOND, 10);
+
+        boolean consumed = RevivalCost.tryConsume(
+            10,
+            0,
+            List.of(
+                new ItemStack(Items.DIAMOND, 5),
+                new ItemStack(Items.IRON_INGOT, 1)
+            ),
+            List.of(availableDiamonds)
+        );
+
+        assertFalse(consumed);
+        assertEquals(10, availableDiamonds.getCount());
+    }
+
+    @Test
+    void shouldNotConsumeAnythingWhenXpIsInsufficient() {
+        ItemStack available = new ItemStack(Items.DIAMOND, 10);
+
+        boolean consumed = RevivalCost.tryConsume(
+            4,
+            5,
+            List.of(new ItemStack(Items.DIAMOND, 5)),
+            List.of(available)
+        );
+
+        assertFalse(consumed);
+        assertEquals(10, available.getCount());
+    }
+
+    @Test
+    void shouldConsumeItemsAcrossMultipleStacks() {
+        ItemStack firstStack = new ItemStack(Items.DIAMOND, 3);
+        ItemStack secondStack = new ItemStack(Items.DIAMOND, 4);
+
+        boolean consumed = RevivalCost.tryConsume(
+            5,
+            0,
+            List.of(new ItemStack(Items.DIAMOND, 5)),
+            List.of(firstStack, secondStack)
+        );
+
+        assertTrue(consumed);
+        assertEquals(0, firstStack.getCount());
+        assertEquals(2, secondStack.getCount());
+    }
+
+    @Test
+    void shouldNotConsumeItemsWithDifferentComponents() {
+        ItemStack required = new ItemStack(Items.DIAMOND, 1);
+        required.set(
+            DataComponents.CUSTOM_NAME,
+            Component.literal("Required diamond")
+        );
+
+        ItemStack available = new ItemStack(Items.DIAMOND, 64);
+
+        boolean consumed = RevivalCost.tryConsume(
+            10,
+            0,
+            List.of(required),
+            List.of(available)
+        );
+
+        assertFalse(consumed);
+        assertEquals(64, available.getCount());
     }
 }

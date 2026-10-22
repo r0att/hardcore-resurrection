@@ -106,6 +106,86 @@ public final class RevivalCost {
         return true;
     }
 
+    public boolean tryConsume(Player player) {
+        List<ItemStack> requiredItems = new ArrayList<>();
+
+        for (ItemCost item : items) {
+            requiredItems.add(item.stack().copyWithCount(item.count()));
+        }
+
+        List<ItemStack> availableItems = new ArrayList<>();
+        int inventorySize = player.getInventory().getContainerSize();
+
+        for (int slot = 0; slot < inventorySize; slot++) {
+            ItemStack stack = player.getInventory().getItem(slot);
+
+            if (!stack.isEmpty()) {
+                availableItems.add(stack);
+            }
+        }
+
+        if (!tryConsume(
+            player.experienceLevel,
+            xpLevels,
+            requiredItems,
+            availableItems
+        )) {
+            return false;
+        }
+
+        player.giveExperienceLevels(-xpLevels);
+        return true;
+    }
+
+    static boolean tryConsume(
+        int availableXpLevels,
+        int requiredXpLevels,
+        List<ItemStack> requiredItems,
+        List<ItemStack> availableItems
+    ) {
+        if (!canAfford(
+            availableXpLevels,
+            requiredXpLevels,
+            requiredItems,
+            availableItems
+        )) {
+            return false;
+        }
+
+        List<ItemStack> required = mergeStacks(requiredItems);
+
+        for (ItemStack requiredStack : required) {
+            int remaining = requiredStack.getCount();
+
+            for (ItemStack availableStack : availableItems) {
+                if (availableStack.isEmpty()) {
+                    continue;
+                }
+
+                if (!ItemStack.isSameItemSameComponents(
+                    requiredStack,
+                    availableStack
+                )) {
+                    continue;
+                }
+
+                int consumed = Math.min(
+                    remaining,
+                    availableStack.getCount()
+                );
+
+                availableStack.shrink(consumed);
+                remaining -= consumed;
+
+                if (remaining == 0) {
+                    break;
+                }
+            }
+        }
+
+        return true;
+    }
+
     public int getXpLevels() {
         return xpLevels;
     }
